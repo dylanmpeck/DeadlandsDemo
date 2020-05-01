@@ -6,6 +6,7 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour
 {
     Animator playerAnimator;
+    [SerializeField] GameObject lClavicle, torso, lHand, lElbow;
     // Start is called before the first frame update
     void Start()
     {
@@ -50,5 +51,24 @@ public class PlayerController : MonoBehaviour
         mousePos.y = transform.position.y;
         Vector3 lookDir = (mousePos - transform.position).normalized;
         transform.LookAt(mousePos);
+    }
+
+    private void LateUpdate()
+    {
+        // Rotate arm when shooting to correct animation
+        if (playerAnimator.GetCurrentAnimatorStateInfo(1).IsName("ShootRevolver") || playerAnimator.GetCurrentAnimatorStateInfo(1).IsName("ShootRevolver 0"))
+        {
+            Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition + Vector3.forward * Vector3.Distance(transform.position, Camera.main.transform.position));
+            mousePos.y = torso.transform.position.y - 2.2f; // height offset to make sure arm faces forward
+            Vector3 lookDir = (mousePos - new Vector3(transform.position.x, torso.transform.position.y, transform.position.z)).normalized;
+            lClavicle.transform.forward = lookDir;
+            Vector3 prevUp = lHand.transform.forward;
+            //lHand.transform.localPosition = Vector3.MoveTowards(lHand.transform.localPosition, mousePos - lHand.transform.position, 1f);
+
+            //lHand.transform.right = -lookDir;
+            //lHand.transform.forward = prevUp;
+            lElbow.transform.right = -(mousePos - new Vector3(lElbow.transform.position.x, torso.transform.position.y - 2.2f, lElbow.transform.position.z)).normalized;
+            //lHand.transform.forward = prevUp;
+        }
     }
 }
