@@ -6,10 +6,19 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour
 {
     Animator playerAnimator;
+    public Transform projectileSpawnLocation;
+    public Vector3 adjustedProjectileSpawnLocation;
     [SerializeField] GameObject lClavicle, torso, lHand, lElbow;
+    [SerializeField] GameObject projectilePrefab;
+    [SerializeField] ParticleSystem muzzleFlash;
+    [SerializeField] GameObject projectileEffectTest;
+    bool spawnProjectile = false;
+
+
     // Start is called before the first frame update
     void Start()
     {
+        adjustedProjectileSpawnLocation = projectileSpawnLocation.position;
         playerAnimator = GetComponent<Animator>();
     }
 
@@ -21,6 +30,8 @@ public class PlayerController : MonoBehaviour
             playerAnimator.SetBool("Running", true);
             //playerAnimator.SetFloat("Runspeed", Input.GetAxisRaw("Vertical"));
             Vector3 inputDirection = new Vector3(Input.GetAxisRaw("Horizontal"), 0, Input.GetAxisRaw("Vertical"));
+
+            adjustedProjectileSpawnLocation = projectileSpawnLocation.position + (inputDirection * Time.deltaTime * 4.0f);
 
             if (inputDirection.magnitude > 1.0f)
             {
@@ -35,11 +46,15 @@ public class PlayerController : MonoBehaviour
         else
         {
             playerAnimator.SetBool("Running", false);
+            adjustedProjectileSpawnLocation = projectileSpawnLocation.position;
         }
 
         if (Input.GetMouseButtonDown(0))
         {
+            if (muzzleFlash)
+                muzzleFlash.Play();
             playerAnimator.SetTrigger("Shoot");
+            spawnProjectile = true;
         }
 
         LookAtMousePos();
@@ -69,6 +84,14 @@ public class PlayerController : MonoBehaviour
             //lHand.transform.forward = prevUp;
             lElbow.transform.right = -(mousePos - new Vector3(lElbow.transform.position.x, torso.transform.position.y - 2.2f, lElbow.transform.position.z)).normalized;
             //lHand.transform.forward = prevUp;
+
+            /*if (spawnProjectile)
+            {
+                Instantiate(projectilePrefab, adjustedProjectileSpawnLocation, Quaternion.identity);
+                if (muzzleFlash)
+                    muzzleFlash.Play();
+                spawnProjectile = false;
+            }*/
         }
     }
 }
