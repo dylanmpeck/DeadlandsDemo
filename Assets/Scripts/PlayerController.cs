@@ -5,7 +5,10 @@ using UnityEngine;
 [RequireComponent(typeof(Animator))]
 public class PlayerController : MonoBehaviour
 {
+    float moveSpeed = 4.0f;
+    public float rollSpeed;
     Animator playerAnimator;
+    Vector3 movementAxis = Vector3.zero;
 
     [Header("Projectile Variables")]
     public Transform projectileSpawnLocation;
@@ -17,6 +20,9 @@ public class PlayerController : MonoBehaviour
     [SerializeField] GameObject torso;
     [SerializeField] GameObject lClavicle, lHand, lElbow;
 
+    [HideInInspector] public bool canShoot = true;
+    [HideInInspector] public bool canMove = true;
+
 
     // Start is called before the first frame update
     void Start()
@@ -27,11 +33,13 @@ public class PlayerController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetAxisRaw("Horizontal") != 0.0f || Input.GetAxisRaw("Vertical") != 0.0f)
+        movementAxis.x = Input.GetAxisRaw("Horizontal");
+        movementAxis.z = Input.GetAxisRaw("Vertical");
+        if (canMove && (movementAxis.x != 0.0f || movementAxis.z != 0.0f))
         {
             playerAnimator.SetBool("Running", true);
             //playerAnimator.SetFloat("Runspeed", Input.GetAxisRaw("Vertical"));
-            Vector3 inputDirection = new Vector3(Input.GetAxisRaw("Horizontal"), 0, Input.GetAxisRaw("Vertical"));
+            Vector3 inputDirection = new Vector3(movementAxis.x, 0, movementAxis.z);
 
             if (inputDirection.magnitude > 1.0f)
             {
@@ -41,18 +49,23 @@ public class PlayerController : MonoBehaviour
             Vector3 moveDirection = transform.InverseTransformDirection(inputDirection);
             playerAnimator.SetFloat("XAxis", moveDirection.x);
             playerAnimator.SetFloat("YAxis", moveDirection.z);
-            transform.Translate(moveDirection * Time.deltaTime * 4.0f);
+            transform.Translate(moveDirection * Time.deltaTime * moveSpeed);
         }
         else
         {
             playerAnimator.SetBool("Running", false);
         }
 
-        if (Input.GetMouseButtonDown(0))
+        if (canShoot && Input.GetMouseButtonDown(0))
         {
             if (muzzleFlash)
                 muzzleFlash.Play();
             playerAnimator.SetTrigger("Shoot");
+        }
+
+        if (canMove && Input.GetKeyDown(KeyCode.Space))
+        {
+            playerAnimator.SetTrigger("Roll");
         }
 
         LookAtMousePos();
@@ -63,13 +76,15 @@ public class PlayerController : MonoBehaviour
         Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition + Vector3.forward * Vector3.Distance(transform.position, Camera.main.transform.position));
         mousePos.y = transform.position.y;
         Vector3 lookDir = (mousePos - transform.position).normalized;
-        transform.LookAt(mousePos);
+        Quaternion lookRotation = Quaternion.LookRotation(lookDir, Vector3.up);
+        transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, 5.5f * Time.deltaTime);
+        //transform.LookAt(mousePos);
     }
 
     private void LateUpdate()
     {
         // Rotate arm to correct animation when shooting 
-        if (playerAnimator.GetCurrentAnimatorStateInfo(1).IsName("ShootRevolver") || playerAnimator.GetCurrentAnimatorStateInfo(1).IsName("ShootRevolver 0"))
+        if (canShoot && (playerAnimator.GetCurrentAnimatorStateInfo(1).IsName("ShootRevolver") || playerAnimator.GetCurrentAnimatorStateInfo(1).IsName("ShootRevolver 0")))
         {
             Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition + Vector3.forward * Vector3.Distance(transform.position, Camera.main.transform.position));
             mousePos.y = torso.transform.position.y - 2.2f; // height offset to make sure arm faces forward
@@ -77,6 +92,13 @@ public class PlayerController : MonoBehaviour
             lClavicle.transform.forward = lookDir;
             Vector3 prevUp = lHand.transform.forward;
             lElbow.transform.right = -(mousePos - new Vector3(lElbow.transform.position.x, torso.transform.position.y - 2.2f, lElbow.transform.position.z)).normalized;
+        }
+
+        if (playerAnimator.GetCurrentAnimatorStateInfo(0).IsName("Roll"))
+        {
+            if (movementAxis.x != 0.0f || movementAxis.z != 0.0f)
+                transform.forward = movementAxis;
+            transform.position += transform.forward * Time.deltaTime * rollSpeed;
         }
     }
 }
