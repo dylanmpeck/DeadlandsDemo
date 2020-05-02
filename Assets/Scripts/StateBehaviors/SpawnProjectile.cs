@@ -22,10 +22,13 @@ public class SpawnProjectile : StateMachineBehaviour
         if (Mathf.Approximately(stateInfo.normalizedTime, (.10f / stateInfo.length)))
         {
             // projectilePrefab.InstantiateAsync(animator.GetComponent<PlayerController>().projectileSpawnLocation.position, Quaternion.identity);
-
             PlayerController playerController = animator.GetComponent<PlayerController>();
+            Vector3 spawnLocation = playerController.projectileSpawnLocation.position;
+            Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition + Vector3.forward * Vector3.Distance(spawnLocation, Camera.main.transform.position));
+            mousePos.y = spawnLocation.y;
+
             GameObject projectile = playerController.objectPoolHandler.GetCurrentActiveObject();
-            projectile.transform.SetPositionAndRotation(playerController.projectileSpawnLocation.position, Quaternion.identity);
+            projectile.transform.SetPositionAndRotation(playerController.projectileSpawnLocation.position, Quaternion.LookRotation((mousePos - spawnLocation).normalized));
             projectile.SetActive(true);
         }
     }

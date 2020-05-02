@@ -6,6 +6,7 @@ using UnityEngine.AddressableAssets;
 public class ObjectPoolHandler : MonoBehaviour
 {
     [SerializeField] AssetReference objectToSpawn;
+    [SerializeField] AssetReference hitEffectPrefab;
     [SerializeField] int numOfObjects;
     public List<GameObject> objectPool = new List<GameObject>();
     int currentPoolIdx = -1;
@@ -22,6 +23,16 @@ public class ObjectPoolHandler : MonoBehaviour
                 objectPool.Add(op.Result);
             };
         }
+
+        /*GameObject hitEffects = new GameObject("HitEffects");
+
+        for (int i = 0; i < numOfObjects; i++)
+        {
+            hitEffectPrefab.InstantiateAsync().Completed += op =>
+            {
+                op.Result.transform.SetParent(hitEffects.transform);
+            };
+        }*/
     }
 
     public GameObject GetCurrentActiveObject()
