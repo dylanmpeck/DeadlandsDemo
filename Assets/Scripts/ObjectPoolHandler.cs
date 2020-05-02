@@ -9,11 +9,15 @@ public class ObjectPoolHandler : MonoBehaviour
     [SerializeField] AssetReference hitEffectPrefab;
     [SerializeField] int numOfObjects;
     public List<GameObject> objectPool = new List<GameObject>();
+    List<GameObject> hitEffectsList = new List<GameObject>();
     int currentPoolIdx = -1;
+    bool isProjectile = true;
 
     // Start is called before the first frame update
     void Start()
     {
+        GameObject hitEffects = new GameObject("HitEffects");
+
         for (int i = 0; i < numOfObjects; i++)
         {
             objectToSpawn.InstantiateAsync().Completed += op =>
@@ -21,18 +25,17 @@ public class ObjectPoolHandler : MonoBehaviour
                 op.Result.SetActive(false);
                 op.Result.transform.SetParent(transform);
                 objectPool.Add(op.Result);
+                if (isProjectile)
+                {
+                    hitEffectPrefab.InstantiateAsync().Completed += hitOp =>
+                    {
+                        hitOp.Result.transform.SetParent(hitEffects.transform);
+                        op.Result.GetComponent<MoveProjectile>().hitEffect = hitOp.Result.GetComponent<ParticleSystem>();
+                        hitEffectsList.Add(hitOp.Result);
+                    };
+                }
             };
         }
-
-        /*GameObject hitEffects = new GameObject("HitEffects");
-
-        for (int i = 0; i < numOfObjects; i++)
-        {
-            hitEffectPrefab.InstantiateAsync().Completed += op =>
-            {
-                op.Result.transform.SetParent(hitEffects.transform);
-            };
-        }*/
     }
 
     public GameObject GetCurrentActiveObject()
@@ -45,9 +48,10 @@ public class ObjectPoolHandler : MonoBehaviour
 
     public void CleanupPool()
     {
-        foreach (GameObject obj in objectPool)
+        for (int i = 0; i < numOfObjects; i++)
         {
-            Addressables.ReleaseInstance(obj);
+            if (isProjectile) Addressables.ReleaseInstance(hitEffectsList[i]);
+            Addressables.ReleaseInstance(objectPool[i]);
         }
         objectPool.Clear();
     }

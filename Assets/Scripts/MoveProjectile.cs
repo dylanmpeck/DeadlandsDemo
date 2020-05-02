@@ -6,24 +6,7 @@ using UnityEngine.AddressableAssets;
 public class MoveProjectile : MonoBehaviour
 {
     float speed = 16.0f;
-    [SerializeField] TrailRenderer trailRenderer;
-
-    // Start is called before the first frame update
-   /* void Start()
-    {
-        Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition + Vector3.forward * Vector3.Distance(transform.position, Camera.main.transform.position));
-        mousePos.y = transform.position.y;
-        transform.LookAt(mousePos);
-    }*/
-
-    private void OnEnable()
-    {
-       /* Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition + Vector3.forward * Vector3.Distance(transform.position, Camera.main.transform.position));
-        mousePos.y = transform.position.y;
-        transform.LookAt(mousePos);
-        if (trailRenderer)
-            trailRenderer.Clear();*/
-    }
+    public ParticleSystem hitEffect;
 
     // Update is called once per frame
     void Update()
@@ -43,5 +26,11 @@ public class MoveProjectile : MonoBehaviour
     public void Hit()
     {
         gameObject.SetActive(false);
+        if (hitEffect)
+        {
+            hitEffect.transform.position = transform.position;
+            hitEffect.transform.forward = -transform.forward;
+            hitEffect.Play();
+        }
     }
 }
