@@ -1,11 +1,13 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Events;
+using UnityEngine.AddressableAssets;
 
 public class SpawnProjectile : StateMachineBehaviour
 {
-    public GameObject projectilePrefab;
+
+    public AssetReference projectilePrefab;
+   // public GameObject projectilePrefab;
 
     // OnStateEnter is called when a transition starts and the state machine starts to evaluate this state
     override public void OnStateEnter(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
@@ -16,9 +18,15 @@ public class SpawnProjectile : StateMachineBehaviour
     // OnStateUpdate is called on each Update frame between OnStateEnter and OnStateExit callbacks
     override public void OnStateUpdate(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
     {
+        
         if (Mathf.Approximately(stateInfo.normalizedTime, (.10f / stateInfo.length)))
         {
-            Instantiate(projectilePrefab, animator.GetComponent<PlayerController>().projectileSpawnLocation.position, Quaternion.identity);
+            // projectilePrefab.InstantiateAsync(animator.GetComponent<PlayerController>().projectileSpawnLocation.position, Quaternion.identity);
+
+            PlayerController playerController = animator.GetComponent<PlayerController>();
+            GameObject projectile = playerController.objectPoolHandler.GetCurrentActiveObject();
+            projectile.transform.SetPositionAndRotation(playerController.projectileSpawnLocation.position, Quaternion.identity);
+            projectile.SetActive(true);
         }
     }
 

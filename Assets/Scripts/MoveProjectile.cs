@@ -1,25 +1,28 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AddressableAssets;
 
 public class MoveProjectile : MonoBehaviour
 {
     float speed = 16.0f;
-    public GameObject muzzlePrefab;
+    [SerializeField] TrailRenderer trailRenderer;
+
     // Start is called before the first frame update
-    void Start()
+   /* void Start()
     {
         Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition + Vector3.forward * Vector3.Distance(transform.position, Camera.main.transform.position));
         mousePos.y = transform.position.y;
         transform.LookAt(mousePos);
+    }*/
 
-        if (muzzlePrefab != null)
-        {
-            GameObject muzzleFX = Instantiate(muzzlePrefab, transform.position, transform.rotation);
-            muzzleFX.transform.SetParent(GameObject.FindGameObjectWithTag("Player").transform);
-        }
-
-        StartCoroutine(Parenting());
+    private void OnEnable()
+    {
+        Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition + Vector3.forward * Vector3.Distance(transform.position, Camera.main.transform.position));
+        mousePos.y = transform.position.y;
+        transform.LookAt(mousePos);
+        if (trailRenderer)
+            trailRenderer.Clear();
     }
 
     // Update is called once per frame
@@ -27,12 +30,9 @@ public class MoveProjectile : MonoBehaviour
     {
         transform.position += transform.forward * speed * Time.deltaTime;
         //transform.position = Vector3.MoveTowards(transform.position, startingMousePos, Time.deltaTime * speed);
-    }
-
-    IEnumerator Parenting()
-    {
-        transform.SetParent(GameObject.FindGameObjectWithTag("Player").transform);
-        yield return new WaitForFixedUpdate();
-        transform.SetParent(null);
+        Vector3 screenPoint = Camera.main.WorldToViewportPoint(transform.position);
+        bool onScreen = screenPoint.z > 0 && screenPoint.x > 0 && screenPoint.x < 1 && screenPoint.y > 0 && screenPoint.y < 1;
+        if (!onScreen)
+            gameObject.SetActive(false);
     }
 }

@@ -9612,7 +9612,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: be2f038f863eaa044b94208b5992b566, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  muzzlePrefab: {fileID: 157586, guid: 2574ca206a571a342a7fab69fdfb87aa, type: 3}
+  trailRenderer: {fileID: 7853863567269832904}
 --- !u!1 &7693487831839551923
 GameObject:
   m_ObjectHideFlags: 0

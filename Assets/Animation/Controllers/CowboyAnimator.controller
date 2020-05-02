@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 75580af57a0737b42a4c8d89b125fc84, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  projectilePrefab: {fileID: 5765770522773474726, guid: 6ff5b74b1bc67794aa63fc973311ebcd,
-    type: 3}
+  projectilePrefab:
+    m_AssetGUID: 6ff5b74b1bc67794aa63fc973311ebcd
 --- !u!1102 &-7696057471117570381
 AnimatorState:
   serializedVersion: 5
@@ -59,7 +59,7 @@ AnimatorStateMachine:
     m_Position: {x: 590, y: 190, z: 0}
   - serializedVersion: 1
     m_State: {fileID: -2850979815369508124}
-    m_Position: {x: 920, y: 50, z: 0}
+    m_Position: {x: 920, y: 70, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 6910221161414926227}
     m_Position: {x: 580, y: 50, z: 0}
@@ -649,8 +649,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 75580af57a0737b42a4c8d89b125fc84, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  projectilePrefab: {fileID: 5765770522773474726, guid: 6ff5b74b1bc67794aa63fc973311ebcd,
-    type: 3}
+  projectilePrefab:
+    m_AssetGUID: 6ff5b74b1bc67794aa63fc973311ebcd
 --- !u!1102 &6910221161414926227
 AnimatorState:
   serializedVersion: 5
