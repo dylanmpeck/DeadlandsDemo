@@ -9,6 +9,7 @@ public class PlayerController : MonoBehaviour
     public float rollSpeed;
     Animator playerAnimator;
     Vector3 movementAxis = Vector3.zero;
+    Rigidbody rb;
 
     [Header("Projectile Variables")]
     public Transform projectileSpawnLocation;
@@ -28,33 +29,27 @@ public class PlayerController : MonoBehaviour
     void Start()
     {
         playerAnimator = GetComponent<Animator>();
+        rb = GetComponent<Rigidbody>();
     }
 
     // Update is called once per frame
     void Update()
     {
-        movementAxis.x = Input.GetAxisRaw("Horizontal");
-        movementAxis.z = Input.GetAxisRaw("Vertical");
-        if (canMove && (movementAxis.x != 0.0f || movementAxis.z != 0.0f))
+        if (canMove)
         {
-            playerAnimator.SetBool("Running", true);
-            //playerAnimator.SetFloat("Runspeed", Input.GetAxisRaw("Vertical"));
-            Vector3 inputDirection = new Vector3(movementAxis.x, 0, movementAxis.z);
-
-            if (inputDirection.magnitude > 1.0f)
+            movementAxis = Vector3.zero;
+            movementAxis.x = Input.GetAxisRaw("Horizontal");
+            movementAxis.z = Input.GetAxisRaw("Vertical");
+            if (movementAxis.x != 0.0f || movementAxis.z != 0.0f)
             {
-                inputDirection = inputDirection.normalized;
+                playerAnimator.SetBool("Running", true);
             }
+            else
+            {
+                playerAnimator.SetBool("Running", false);
+            }
+        }
 
-            Vector3 moveDirection = transform.InverseTransformDirection(inputDirection);
-            playerAnimator.SetFloat("XAxis", moveDirection.x);
-            playerAnimator.SetFloat("YAxis", moveDirection.z);
-            transform.Translate(moveDirection * Time.deltaTime * moveSpeed);
-        }
-        else
-        {
-            playerAnimator.SetBool("Running", false);
-        }
 
         if (canShoot && Input.GetMouseButtonDown(0))
         {
@@ -67,8 +62,6 @@ public class PlayerController : MonoBehaviour
         {
             playerAnimator.SetTrigger("Roll");
         }
-
-        LookAtMousePos();
     }
 
     void LookAtMousePos()
@@ -79,6 +72,26 @@ public class PlayerController : MonoBehaviour
         Quaternion lookRotation = Quaternion.LookRotation(lookDir, Vector3.up);
         transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, 5.5f * Time.deltaTime);
         //transform.LookAt(mousePos);
+    }
+
+    private void FixedUpdate()
+    {
+        if (canMove)
+        {
+            Vector3 inputDirection = new Vector3(movementAxis.x, 0, movementAxis.z);
+
+            if (inputDirection.magnitude > 1.0f)
+            {
+                inputDirection = inputDirection.normalized;
+            }
+
+            Vector3 moveDirection = transform.InverseTransformDirection(inputDirection);
+            playerAnimator.SetFloat("XAxis", moveDirection.x);
+            playerAnimator.SetFloat("YAxis", moveDirection.z);
+            rb.MovePosition(rb.position + movementAxis * Time.fixedDeltaTime * moveSpeed);
+        }
+
+        LookAtMousePos();
     }
 
     private void LateUpdate()
@@ -98,7 +111,9 @@ public class PlayerController : MonoBehaviour
         {
             if (movementAxis.x != 0.0f || movementAxis.z != 0.0f)
                 transform.forward = movementAxis;
-            transform.position += transform.forward * Time.deltaTime * rollSpeed;
+            else
+                movementAxis = transform.forward;
+            rb.AddForce(movementAxis * 22, ForceMode.Acceleration);
         }
     }
 }

@@ -8,7 +8,7 @@ public class CameraFollow : MonoBehaviour
     [SerializeField] float keepAwayDistance;
 
     // Update is called once per frame
-    void Update()
+    void FixedUpdate()
     {
         Vector3 followPos = target.transform.position + Vector3.back * keepAwayDistance;
         transform.position = new Vector3(followPos.x, transform.position.y, followPos.z);

@@ -21,6 +21,10 @@ MonoBehaviour:
     m_Address: Assets/PolygonWestern/Prefabs/FX/GunShot_Smoke_FX.prefab
     m_ReadOnly: 0
     m_SerializedLabels: []
+  - m_GUID: 27eb29c3478f1aa4cadc2ac087725131
+    m_Address: Assets/Prefabs/Gunshot_hit.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
   - m_GUID: 6ff5b74b1bc67794aa63fc973311ebcd
     m_Address: Assets/Prefabs/BasicProjectileEffect.prefab
     m_ReadOnly: 0
