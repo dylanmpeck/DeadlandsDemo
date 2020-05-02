@@ -88,7 +88,7 @@ public class PlayerController : MonoBehaviour
             Vector3 moveDirection = transform.InverseTransformDirection(inputDirection);
             playerAnimator.SetFloat("XAxis", moveDirection.x);
             playerAnimator.SetFloat("YAxis", moveDirection.z);
-            rb.MovePosition(rb.position + movementAxis * Time.fixedDeltaTime * moveSpeed);
+            rb.MovePosition(rb.position + movementAxis.normalized * Time.fixedDeltaTime * moveSpeed);
         }
 
         LookAtMousePos();
@@ -113,7 +113,7 @@ public class PlayerController : MonoBehaviour
                 transform.forward = movementAxis;
             else
                 movementAxis = transform.forward;
-            rb.AddForce(movementAxis * 22, ForceMode.Acceleration);
+            rb.AddForce(movementAxis.normalized * 22, ForceMode.Acceleration);
         }
     }
 }
