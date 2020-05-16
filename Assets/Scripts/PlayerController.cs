@@ -12,10 +12,9 @@ public class PlayerController : MonoBehaviour
     Rigidbody rb;
 
     [Header("Projectile Variables")]
-    public Transform projectileSpawnLocation;
-    [SerializeField] GameObject projectilePrefab;
+    [SerializeField] Transform projectileSpawnLocation;
     [SerializeField] ParticleSystem muzzleFlash;
-    public ObjectPoolHandler objectPoolHandler;
+    [SerializeField] ObjectPoolHandler projectiles;
 
     [Header("Body References")]
     [SerializeField] GameObject torso;
@@ -24,12 +23,15 @@ public class PlayerController : MonoBehaviour
     [HideInInspector] public bool canShoot = true;
     [HideInInspector] public bool canMove = true;
 
+    IKGunAim aimer;
+    bool spawningProjectile;
 
     // Start is called before the first frame update
     void Start()
     {
         playerAnimator = GetComponent<Animator>();
         rb = GetComponent<Rigidbody>();
+        aimer = GetComponent<IKGunAim>();
     }
 
     // Update is called once per frame
@@ -55,12 +57,16 @@ public class PlayerController : MonoBehaviour
         {
             if (muzzleFlash)
                 muzzleFlash.Play();
+            if (!spawningProjectile) // call projectile spawning code in FixedUpdate to help sync with animator
+                spawningProjectile = true;
+
             playerAnimator.SetTrigger("Shoot");
         }
 
         if (canMove && Input.GetKeyDown(KeyCode.Space))
         {
             playerAnimator.SetTrigger("Roll");
+            rb.AddForce(movementAxis.normalized * 275, ForceMode.Impulse);
         }
     }
 
@@ -71,7 +77,9 @@ public class PlayerController : MonoBehaviour
         Vector3 lookDir = (mousePos - transform.position).normalized;
         Quaternion lookRotation = Quaternion.LookRotation(lookDir, Vector3.up);
         transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, 5.5f * Time.deltaTime);
-        //transform.LookAt(mousePos);
+
+        // update IK aiming target
+        aimer.target = mousePos;
     }
 
     private void FixedUpdate()
@@ -86,25 +94,43 @@ public class PlayerController : MonoBehaviour
             }
 
             Vector3 moveDirection = transform.InverseTransformDirection(inputDirection);
-            playerAnimator.SetFloat("XAxis", moveDirection.x);
-            playerAnimator.SetFloat("YAxis", moveDirection.z);
+            playerAnimator.SetFloat("XDirection", moveDirection.x);
+            playerAnimator.SetFloat("ZDirection", moveDirection.z);
             rb.MovePosition(rb.position + movementAxis.normalized * Time.fixedDeltaTime * moveSpeed);
         }
 
         LookAtMousePos();
+
+        // call projectile spawning code in FixedUpdate to help sync with animator
+        if (spawningProjectile)
+        {
+            Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition + Vector3.forward * Vector3.Distance(projectileSpawnLocation.transform.position, Camera.main.transform.position));
+            mousePos.y = projectileSpawnLocation.transform.position.y;
+            projectiles.SpawnAndLookAt(projectileSpawnLocation.transform.position, mousePos);
+
+            spawningProjectile = false;
+        }
     }
 
     private void LateUpdate()
     {
         // Rotate arm to correct animation when shooting 
-        if (canShoot && (playerAnimator.GetCurrentAnimatorStateInfo(1).IsName("ShootRevolver") || playerAnimator.GetCurrentAnimatorStateInfo(1).IsName("ShootRevolver 0")))
+        if (canShoot && playerAnimator.GetCurrentAnimatorStateInfo(1).IsName("ShootRevolver"))
         {
             Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition + Vector3.forward * Vector3.Distance(transform.position, Camera.main.transform.position));
-            mousePos.y = torso.transform.position.y - 2.2f; // height offset to make sure arm faces forward
+            mousePos.y = torso.transform.position.y; //+ 2.2f; // height offset to make sure arm faces forward
             Vector3 lookDir = (mousePos - new Vector3(transform.position.x, torso.transform.position.y, transform.position.z)).normalized;
-            lClavicle.transform.forward = lookDir;
-            Vector3 prevUp = lHand.transform.forward;
-            lElbow.transform.right = -(mousePos - new Vector3(lElbow.transform.position.x, torso.transform.position.y - 2.2f, lElbow.transform.position.z)).normalized;
+            // transform.forward = lookDir;
+            //torso.transform.Rotate(Vector3.up, Vector3.Angle(-torso.transform.up, lookDir), Space.World);
+            //lElbow.transform.Rotate(Vector3.up, Vector3.Angle(lElbow.transform.right, lookDir), Space.World);
+            //lClavicle.transform.forward = -lookDir;
+            // lElbow.transform.right = (mousePos - new Vector3(lElbow.transform.position.x, torso.transform.position.y - 2.2f, lElbow.transform.position.z)).normalized;
+           // lHand.transform.Rotate(Vector3.up, Vector3.Angle(lHand.transform.right, lookDir), Space.World);
+            //Quaternion lookRot = Quaternion.LookRotation(lookDir, Vector3.up);
+
+            //lElbow.transform.rotation = Quaternion.RotateTowards(lElbow.transform.rotation, lookRot, 90f);
+
+            //lElbow.transform.Rotate(lElbow.transform.forward, -60);
         }
 
         if (playerAnimator.GetCurrentAnimatorStateInfo(0).IsName("Roll"))
@@ -113,7 +139,7 @@ public class PlayerController : MonoBehaviour
                 transform.forward = movementAxis;
             else
                 movementAxis = transform.forward;
-            rb.AddForce(movementAxis.normalized * 22, ForceMode.Acceleration);
+            rb.AddForce(movementAxis.normalized * 10, ForceMode.Acceleration);
         }
     }
 }

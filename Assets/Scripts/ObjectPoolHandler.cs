@@ -5,6 +5,7 @@ using UnityEngine.AddressableAssets;
 
 public class ObjectPoolHandler : MonoBehaviour
 {
+    [SerializeField] Transform poolParent;
     [SerializeField] AssetReference objectToSpawn;
     [SerializeField] AssetReference hitEffectPrefab;
     [SerializeField] int numOfObjects;
@@ -16,14 +17,17 @@ public class ObjectPoolHandler : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        GameObject hitEffects = new GameObject("HitEffects");
+        GameObject bulletPool = new GameObject("BulletPool" + gameObject.name);
+        GameObject hitEffects = new GameObject("HitEffects" + gameObject.name);
+        bulletPool.transform.SetParent(poolParent);
+        hitEffects.transform.SetParent(poolParent);
 
         for (int i = 0; i < numOfObjects; i++)
         {
             objectToSpawn.InstantiateAsync().Completed += op =>
             {
                 op.Result.SetActive(false);
-                op.Result.transform.SetParent(transform);
+                op.Result.transform.SetParent(bulletPool.transform);
                 objectPool.Add(op.Result);
                 if (isProjectile)
                 {
@@ -36,6 +40,20 @@ public class ObjectPoolHandler : MonoBehaviour
                 }
             };
         }
+    }
+
+    public void Spawn(Vector3 start)
+    {
+        GameObject currentObj = GetCurrentActiveObject();
+        currentObj.transform.position = start;
+        currentObj.transform.rotation = Quaternion.identity;
+    }
+
+    public void SpawnAndLookAt(Vector3 start, Vector3 target)
+    {
+        GameObject currentObj = GetCurrentActiveObject();
+        currentObj.transform.SetPositionAndRotation(start, Quaternion.LookRotation((target - start).normalized));
+        currentObj.SetActive(true);
     }
 
     public GameObject GetCurrentActiveObject()

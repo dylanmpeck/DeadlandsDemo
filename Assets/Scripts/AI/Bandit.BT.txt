@@ -1,0 +1,10 @@
+tree("Root")
+	sequence
+		Stop
+		while not tree "AbleToAttack"
+			MoveTowardsPlayer
+		Shoot
+tree("AbleToAttack")
+	sequence
+		InAttackRange
+		CanSeePlayer

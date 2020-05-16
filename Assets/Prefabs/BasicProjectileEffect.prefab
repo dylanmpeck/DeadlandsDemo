@@ -9613,7 +9613,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: be2f038f863eaa044b94208b5992b566, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  trailRenderer: {fileID: 7853863567269832904}
+  hitEffect: {fileID: 0}
 --- !u!65 &7080447222011028096
 BoxCollider:
   m_ObjectHideFlags: 0
