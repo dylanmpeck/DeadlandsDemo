@@ -26,12 +26,17 @@ public class PlayerController : MonoBehaviour
     IKGunAim aimer;
     bool spawningProjectile;
 
+    Plane mousePlane;
+
+    [SerializeField] GameObject testCube;
+
     // Start is called before the first frame update
     void Start()
     {
         playerAnimator = GetComponent<Animator>();
         rb = GetComponent<Rigidbody>();
         aimer = GetComponent<IKGunAim>();
+        mousePlane = new Plane(Vector3.up, Vector3.zero);
     }
 
     // Update is called once per frame
@@ -70,18 +75,6 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    void LookAtMousePos()
-    {
-        Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition + Vector3.forward * Vector3.Distance(transform.position, Camera.main.transform.position));
-        mousePos.y = transform.position.y;
-        Vector3 lookDir = (mousePos - transform.position).normalized;
-        Quaternion lookRotation = Quaternion.LookRotation(lookDir, Vector3.up);
-        transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, 5.5f * Time.deltaTime);
-
-        // update IK aiming target
-        aimer.target = mousePos;
-    }
-
     private void FixedUpdate()
     {
         if (canMove)
@@ -99,40 +92,14 @@ public class PlayerController : MonoBehaviour
             rb.MovePosition(rb.position + movementAxis.normalized * Time.fixedDeltaTime * moveSpeed);
         }
 
-        LookAtMousePos();
+        LookAtMousePos(GetMousePos());
 
         // call projectile spawning code in FixedUpdate to help sync with animator
-        if (spawningProjectile)
-        {
-            Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition + Vector3.forward * Vector3.Distance(projectileSpawnLocation.transform.position, Camera.main.transform.position));
-            mousePos.y = projectileSpawnLocation.transform.position.y;
-            projectiles.SpawnAndLookAt(projectileSpawnLocation.transform.position, mousePos);
-
-            spawningProjectile = false;
-        }
+        SpawnProjectile(GetMousePos());
     }
 
     private void LateUpdate()
     {
-        // Rotate arm to correct animation when shooting 
-        if (canShoot && playerAnimator.GetCurrentAnimatorStateInfo(1).IsName("ShootRevolver"))
-        {
-            Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition + Vector3.forward * Vector3.Distance(transform.position, Camera.main.transform.position));
-            mousePos.y = torso.transform.position.y; //+ 2.2f; // height offset to make sure arm faces forward
-            Vector3 lookDir = (mousePos - new Vector3(transform.position.x, torso.transform.position.y, transform.position.z)).normalized;
-            // transform.forward = lookDir;
-            //torso.transform.Rotate(Vector3.up, Vector3.Angle(-torso.transform.up, lookDir), Space.World);
-            //lElbow.transform.Rotate(Vector3.up, Vector3.Angle(lElbow.transform.right, lookDir), Space.World);
-            //lClavicle.transform.forward = -lookDir;
-            // lElbow.transform.right = (mousePos - new Vector3(lElbow.transform.position.x, torso.transform.position.y - 2.2f, lElbow.transform.position.z)).normalized;
-           // lHand.transform.Rotate(Vector3.up, Vector3.Angle(lHand.transform.right, lookDir), Space.World);
-            //Quaternion lookRot = Quaternion.LookRotation(lookDir, Vector3.up);
-
-            //lElbow.transform.rotation = Quaternion.RotateTowards(lElbow.transform.rotation, lookRot, 90f);
-
-            //lElbow.transform.Rotate(lElbow.transform.forward, -60);
-        }
-
         if (playerAnimator.GetCurrentAnimatorStateInfo(0).IsName("Roll"))
         {
             if (movementAxis.x != 0.0f || movementAxis.z != 0.0f)
@@ -140,6 +107,46 @@ public class PlayerController : MonoBehaviour
             else
                 movementAxis = transform.forward;
             rb.AddForce(movementAxis.normalized * 10, ForceMode.Acceleration);
+        }
+    }
+
+    void LookAtMousePos(Vector3 mousePos)
+    {
+        //Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition + Vector3.forward * Vector3.Distance(transform.position, Camera.main.transform.position));
+        //mousePos.y = transform.position.y;
+        //mousePos.y = projectileSpawnLocation.transform.position.y;
+        Vector3 lookDir = (mousePos - transform.position).normalized;
+        Quaternion lookRotation = Quaternion.LookRotation(lookDir, Vector3.up);
+        transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, 5.5f * Time.deltaTime);
+
+        testCube.transform.position = mousePos;
+
+        // update IK aiming target
+        aimer.target = mousePos;
+    }
+
+    Vector3 GetMousePos()
+    {
+        var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        float ent = 100.0f;
+        if (mousePlane.Raycast(ray, out ent))
+        {
+            return ray.GetPoint(ent);
+        }
+        return Vector3.zero;
+    }
+
+    private void SpawnProjectile(Vector3 target)
+    {
+        if (spawningProjectile)
+        {
+            target.z -= projectileSpawnLocation.transform.position.y - target.y;
+            target.y = projectileSpawnLocation.transform.position.y;
+            target.y += Random.Range(-0.2f, 0.2f);
+            target.x += Random.Range(-0.2f, 0.2f);
+            projectiles.SpawnAndLookAt(projectileSpawnLocation.transform.position, target);
+
+            spawningProjectile = false;
         }
     }
 }
